@@ -1,0 +1,1099 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Studyspot - Тұран Университеті</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- QR Code Generator CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+        }
+        .seat-btn:hover {
+            transform: translateY(-2px);
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        /* StudySpot AI чат терезесі */
+        #studyspot-ai-launcher {
+            position: fixed; right: 24px; bottom: 24px; z-index: 80;
+            width: 58px; height: 58px; border: 0; border-radius: 18px;
+            background: #4f46e5; color: #fff; box-shadow: 0 12px 30px rgba(79,70,229,.35);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 25px; transition: transform .2s, background .2s;
+        }
+        #studyspot-ai-launcher:hover { transform: translateY(-3px); background: #4338ca; }
+        #studyspot-ai-panel {
+            position: fixed; right: 24px; bottom: 94px; z-index: 80;
+            width: min(390px, calc(100vw - 28px)); height: min(570px, calc(100vh - 125px));
+            background: #fff; border: 1px solid #e2e8f0; border-radius: 22px;
+            box-shadow: 0 22px 70px rgba(15,23,42,.22); overflow: hidden;
+            display: none; flex-direction: column;
+        }
+        #studyspot-ai-panel.open { display: flex; }
+        .ai-chat-header { background: #111827; color: #fff; padding: 15px 16px; display:flex; align-items:center; gap:11px; }
+        .ai-chat-avatar { width:38px; height:38px; border-radius:13px; background:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:19px; }
+        .ai-chat-header button { margin-left:auto; color:#cbd5e1; font-size:22px; padding:2px 7px; }
+        #studyspot-ai-messages { flex:1; overflow-y:auto; padding:15px; background:#f8fafc; display:flex; flex-direction:column; gap:11px; }
+        .ai-message { max-width:88%; padding:11px 13px; border-radius:15px; font-size:13px; line-height:1.55; white-space:pre-wrap; overflow-wrap:anywhere; }
+        .ai-message.bot { align-self:flex-start; color:#1e293b; background:#fff; border:1px solid #e2e8f0; border-top-left-radius:5px; }
+        .ai-message.user { align-self:flex-end; color:#fff; background:#4f46e5; border-top-right-radius:5px; }
+        .ai-message.error { color:#9f1239; background:#fff1f2; border:1px solid #fecdd3; }
+        .ai-chat-suggestions { display:flex; flex-wrap:wrap; gap:6px; padding:9px 13px 0; background:#fff; }
+        .ai-chat-suggestions button { font-size:10px; color:#4338ca; background:#eef2ff; border:1px solid #e0e7ff; border-radius:999px; padding:6px 9px; }
+        .ai-chat-compose { padding:11px 12px 13px; display:flex; gap:8px; background:#fff; border-top:1px solid #e2e8f0; }
+        #studyspot-ai-input { flex:1; min-width:0; border:1px solid #cbd5e1; border-radius:12px; padding:11px 12px; font-size:13px; outline:none; }
+        #studyspot-ai-input:focus { border-color:#6366f1; box-shadow:0 0 0 3px rgba(99,102,241,.12); }
+        #studyspot-ai-send { width:43px; border-radius:12px; color:#fff; background:#4f46e5; display:flex; align-items:center; justify-content:center; font-size:18px; }
+        #studyspot-ai-send:disabled { opacity:.55; cursor:not-allowed; }
+        .ai-chat-disclaimer { font-size:9px; color:#94a3b8; text-align:center; padding:0 10px 8px; background:#fff; }
+        @media (max-width: 480px) {
+            #studyspot-ai-launcher { right:16px; bottom:16px; }
+            #studyspot-ai-panel { right:10px; bottom:84px; width:calc(100vw - 20px); height:min(600px, calc(100vh - 105px)); }
+        }
+
+    </style>
+</head>
+<body class="text-slate-800 flex flex-col min-h-screen">
+
+    <!-- NAVIGATION HEADER -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-black text-xl shadow-md shadow-indigo-200">
+                    S
+                </div>
+                <div>
+                    <div class="flex items-center space-x-2">
+                        <span class="font-black text-xl tracking-tight text-slate-900">Study<span class="text-indigo-600">spot</span></span>
+                        <span class="bg-indigo-50 text-indigo-700 text-xs px-2 py-0.5 rounded-full font-bold border border-indigo-100">Turan Edition</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 font-medium">Тұран Университетінің броньдау жүйесі</p>
+                </div>
+            </div>
+
+            <!-- Header Action Controls -->
+            <div class="flex items-center space-x-3">
+                <!-- Admin Analytics Button -->
+                <button onclick="toggleModal('adminModal')" class="hidden sm:flex items-center space-x-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-3 py-2 rounded-lg transition">
+                    <i data-lucide="bar-chart-3" class="w-4 h-4 text-indigo-600"></i>
+                    <span>Әкімшілік Аналитика</span>
+                </button>
+
+                <!-- User Bookings Badge -->
+                <button onclick="toggleModal('myBookingsModal')" class="relative flex items-center space-x-2 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 text-indigo-700 text-xs font-bold px-3.5 py-2 rounded-lg transition">
+                    <i data-lucide="bookmark" class="w-4 h-4"></i>
+                    <span>Моим брони</span>
+                    <span id="bookingCountBadge" class="hidden bg-indigo-600 text-white text-[10px] w-4 h-4 rounded-full items-center justify-center font-bold">0</span>
+                </button>
+
+                <!-- Profile Avatar -->
+                <div class="flex items-center space-x-2 border-l border-slate-200 pl-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center font-bold text-slate-600 text-xs border border-slate-300">
+                        АӘ
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-grow w-full">
+        
+        <!-- TOP FILTER & SELECTION BAR -->
+        <section class="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200 shadow-sm mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                
+                <!-- University Campus Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="building-2" class="w-3.5 h-3.5 text-indigo-600"></i> Университет
+                    </label>
+                    <select id="universitySelect" onchange="filterSpots()" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="Turan" selected>Тұран Университеті (Бас корпус)</option>
+                        <option value="KazNU">Әл-Фараби атындағы ҚазҰУ</option>
+                        <option value="Satbayev">Satbayev University</option>
+                        <option value="AITU">Astana IT University</option>
+                    </select>
+                </div>
+
+                <!-- Date Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="calendar" class="w-3.5 h-3.5 text-indigo-600"></i> Күні
+                    </label>
+                    <input type="date" id="bookingDate" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+
+                <!-- Start Time Picker -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-600"></i> Басталу уақыты
+                    </label>
+                    <select id="bookingTime" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="09:00">09:00</option>
+                        <option value="10:00" selected>10:00</option>
+                        <option value="11:00">11:00</option>
+                        <option value="12:00">12:00</option>
+                        <option value="13:00">13:00</option>
+                        <option value="14:00">14:00</option>
+                        <option value="15:00">15:00</option>
+                        <option value="16:00">16:00</option>
+                        <option value="17:00">17:00</option>
+                        <option value="18:00">18:00</option>
+                    </select>
+                </div>
+
+                <!-- Duration Picker -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="timer" class="w-3.5 h-3.5 text-indigo-600"></i> Ұзақтығы
+                    </label>
+                    <select id="bookingDuration" class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                        <option value="1">1 сағат</option>
+                        <option value="2" selected>2 сағат</option>
+                        <option value="3">3 сағат</option>
+                        <option value="4">4 сағат</option>
+                    </select>
+                </div>
+
+                <!-- Search Input -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <i data-lucide="search" class="w-3.5 h-3.5 text-indigo-600"></i> Іздеу
+                    </label>
+                    <input type="text" id="searchInput" onkeyup="filterSpots()" placeholder="Аудитория немесе зона..." class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2.5 text-xs font-medium text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none">
+                </div>
+            </div>
+
+            <!-- CATEGORY TABS & AMENITY FILTERS -->
+            <div class="mt-4 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-3">
+                <!-- Zone Type Tabs -->
+                <div class="flex items-center space-x-1.5 bg-slate-100 p-1 rounded-xl">
+                    <button onclick="setCategory('all')" id="tab-all" class="category-tab active px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-indigo-600 shadow-sm transition">Барлығы</button>
+                    <button onclick="setCategory('coworking')" id="tab-coworking" class="category-tab px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">Коворкингтер</button>
+                    <button onclick="setCategory('library')" id="tab-library" class="category-tab px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">Кітапхана</button>
+                    <button onclick="setCategory('classroom')" id="tab-classroom" class="category-tab px-3 py-1.5 rounded-lg text-xs font-bold text-slate-600 hover:text-slate-900 transition">Бос аудиториялар</button>
+                </div>
+
+                <!-- Amenities Quick Toggles -->
+                <div class="flex items-center space-x-2 text-xs font-medium text-slate-600 overflow-x-auto py-1">
+                    <span class="text-slate-400 font-bold text-[11px] uppercase mr-1">Жабдықталуы:</span>
+                    <label class="flex items-center space-x-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                        <input type="checkbox" id="filterSocket" onchange="filterSpots()" class="rounded text-indigo-600 focus:ring-0">
+                        <span>🔌 Розетка</span>
+                    </label>
+                    <label class="flex items-center space-x-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                        <input type="checkbox" id="filterBoard" onchange="filterSpots()" class="rounded text-indigo-600 focus:ring-0">
+                        <span>🖊️ Маркерлік тақта</span>
+                    </label>
+                    <label class="flex items-center space-x-1 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg cursor-pointer hover:bg-slate-100 transition">
+                        <input type="checkbox" id="filterQuiet" onchange="filterSpots()" class="rounded text-indigo-600 focus:ring-0">
+                        <span>🤫 Quiet Zone</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- SPOTS GRID HEADER -->
+        <div class="flex items-center justify-between mb-4">
+            <div>
+                <h2 class="text-lg font-extrabold text-slate-900" id="spotsHeadline">Тұран Университетіндегі орындар</h2>
+                <p class="text-xs text-slate-500" id="spotsCountText">Қолжетімді 6 аймақ табылды</p>
+            </div>
+            
+            <!-- Map / Grid View Switch -->
+            <div class="flex items-center bg-slate-200 p-1 rounded-lg text-xs font-bold text-slate-600">
+                <button onclick="setViewMode('grid')" id="btnViewGrid" class="px-2.5 py-1 rounded-md bg-white text-slate-800 shadow-sm flex items-center gap-1">
+                    <i data-lucide="grid" class="w-3.5 h-3.5"></i> Тор
+                </button>
+                <button onclick="setViewMode('map')" id="btnViewMap" class="px-2.5 py-1 rounded-md hover:text-slate-900 flex items-center gap-1">
+                    <i data-lucide="map" class="w-3.5 h-3.5"></i> Интерактивті Карта
+                </button>
+            </div>
+        </div>
+
+        <!-- MAIN CONTAINER FOR GRID & MAP -->
+        <div id="spotsGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- Dynamic Spot Cards Rendered via JS -->
+        </div>
+
+        <!-- INTERACTIVE FLOOR MAP VIEW (HIDDEN BY DEFAULT) -->
+        <div id="spotsMapView" class="hidden bg-white rounded-2xl border border-slate-200 p-6 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i data-lucide="layers" class="w-4 h-4 text-indigo-600"></i>
+                    Тұран Университеті — 2-қабат коворкинг схемасы
+                </h3>
+                <div class="flex items-center space-x-4 text-xs font-semibold">
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Бос орын</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-rose-500 inline-block"></span> Занято</span>
+                    <span class="flex items-center gap-1.5"><span class="w-3 h-3 rounded-full bg-indigo-600 inline-block"></span> Тексерілген</span>
+                </div>
+            </div>
+
+            <div class="bg-slate-900 rounded-xl p-6 relative overflow-hidden min-h-[380px] flex flex-col justify-between text-white">
+                <!-- Visual Map Layout -->
+                <div class="absolute inset-0 opacity-10 bg-[radial-gradient(#fff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                
+                <div class="relative z-10 grid grid-cols-3 gap-4">
+                    <!-- Zone A -->
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-800/80 backdrop-blur">
+                        <span class="text-xs font-bold text-indigo-400 uppercase tracking-wider block mb-2">A Аймағы (Кітапхана)</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="quickSelectSeat('A-01')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">A1</button>
+                            <button onclick="quickSelectSeat('A-02')" class="h-10 rounded bg-rose-500/20 border border-rose-500 text-rose-300 font-bold text-xs cursor-not-allowed opacity-60">A2</button>
+                            <button onclick="quickSelectSeat('A-03')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">A3</button>
+                        </div>
+                    </div>
+
+                    <!-- Zone B -->
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-800/80 backdrop-blur">
+                        <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider block mb-2">B Аймағы (Open Coworking)</span>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button onclick="quickSelectSeat('B-01')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">B1</button>
+                            <button onclick="quickSelectSeat('B-02')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">B2</button>
+                            <button onclick="quickSelectSeat('B-03')" class="h-10 rounded bg-rose-500/20 border border-rose-500 text-rose-300 font-bold text-xs cursor-not-allowed opacity-60">B3</button>
+                        </div>
+                    </div>
+
+                    <!-- Zone C -->
+                    <div class="border border-slate-700 rounded-lg p-3 bg-slate-800/80 backdrop-blur">
+                        <span class="text-xs font-bold text-amber-400 uppercase tracking-wider block mb-2">C Аймағы (Топтық бөлме)</span>
+                        <div class="grid grid-cols-2 gap-2">
+                            <button onclick="quickSelectSeat('C-01')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">C1 (Ауд. 205)</button>
+                            <button onclick="quickSelectSeat('C-02')" class="h-10 rounded bg-emerald-500/20 border border-emerald-500 text-emerald-300 font-bold text-xs hover:bg-emerald-500 hover:text-white transition">C2 (Ауд. 206)</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="relative z-10 text-center text-xs text-slate-400 border-t border-slate-800 pt-3 mt-6">
+                    💡 Картадағы кез келген бос (жасыл) орынды басу арқылы жылдам бронь жасауға болады.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- BOOKING MODAL -->
+    <div id="bookingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-lg w-full overflow-hidden shadow-2xl border border-slate-100 transition-all">
+            <!-- Modal Header -->
+            <div class="bg-slate-900 text-white p-5 flex items-center justify-between">
+                <div>
+                    <h3 id="modalSpotTitle" class="font-extrabold text-base">Аудиторияны броньдау</h3>
+                    <p id="modalSpotLocation" class="text-xs text-slate-400">Тұран Университеті • 2-қабат</p>
+                </div>
+                <button onclick="toggleModal('bookingModal')" class="text-slate-400 hover:text-white transition">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="p-6 space-y-4">
+                
+                <!-- Seat Number Selector -->
+                <div>
+                    <label class="block text-xs font-bold text-slate-600 uppercase mb-2">1. Нақты орынды немесе үстелді таңдаңыз</label>
+                    <div id="seatsPickerContainer" class="grid grid-cols-5 gap-2">
+                        <!-- Dynamic Seat Buttons -->
+                    </div>
+                </div>
+
+                <!-- Booking Summary Card -->
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-xs space-y-2">
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Университет:</span>
+                        <span id="summaryUniv" class="font-bold text-slate-800">Тұран Университеті</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Күні & Уақыты:</span>
+                        <span id="summaryDateTime" class="font-bold text-slate-800">Бүгін, 10:00 (2 сағат)</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span class="text-slate-500">Таңдалған орын:</span>
+                        <span id="summarySeat" class="font-bold text-indigo-600">Үстел №1</span>
+                    </div>
+                    <div class="flex justify-between border-t border-slate-200 pt-2 font-extrabold text-sm">
+                        <span>Броньдау бағасы:</span>
+                        <span class="text-emerald-600">Тегін (Студенттерге)</span>
+                    </div>
+                </div>
+
+                <!-- Confirm Action Button -->
+                <button onclick="confirmBooking()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl transition shadow-lg shadow-indigo-200 flex items-center justify-center space-x-2 text-sm">
+                    <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+                    <span>Броньдауды растау және QR алу</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- QR CODE SUCCESS MODAL -->
+    <div id="qrModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-sm w-full p-6 text-center shadow-2xl border border-slate-100">
+            <div class="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="check" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-black text-lg text-slate-900">Бронь сәтті расталды!</h3>
+            <p class="text-xs text-slate-500 mt-1 mb-4">Университет кірісіндегі турникетке немесе орындағы QR-кодқа сканерлеңіз</p>
+
+            <!-- Generated QR Code Container -->
+            <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 flex items-center justify-center mx-auto w-48 h-48 mb-4 shadow-inner" id="qrcode"></div>
+
+            <div class="text-left bg-indigo-50/50 rounded-xl p-3 text-xs space-y-1 mb-5 border border-indigo-100">
+                <p class="font-bold text-slate-800" id="qrModalSpotName">Тұран • Коворкинг</p>
+                <p class="text-slate-600" id="qrModalTime">Бүгін, 10:00 - 12:00</p>
+                <p class="text-indigo-600 font-semibold" id="qrModalSeat">Орын: №01</p>
+            </div>
+
+            <button onclick="toggleModal('qrModal')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2.5 rounded-xl text-xs transition">
+                Түсінікті, жабу
+            </button>
+        </div>
+    </div>
+
+    <!-- MY BOOKINGS MODAL -->
+    <div id="myBookingsModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-md w-full overflow-hidden shadow-2xl border border-slate-100">
+            <div class="p-4 border-b border-slate-100 flex items-center justify-between">
+                <h3 class="font-extrabold text-slate-900 text-sm flex items-center gap-2">
+                    <i data-lucide="bookmark" class="w-4 h-4 text-indigo-600"></i> Менің Броньдарым
+                </h3>
+                <button onclick="toggleModal('myBookingsModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+            </div>
+            
+            <div id="myBookingsList" class="p-4 space-y-3 max-h-[350px] overflow-y-auto custom-scrollbar">
+                <!-- Dynamic Active Bookings Rendered via JS -->
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN ANALYTICS MODAL -->
+    <div id="adminModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-white rounded-2xl max-w-2xl w-full p-6 shadow-2xl border border-slate-100">
+            <div class="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="font-extrabold text-slate-900 text-base flex items-center gap-2">
+                        <i data-lucide="shield-check" class="w-5 h-5 text-indigo-600"></i>
+                        Тұран Университеті — Әкімшілік Аналитика Панелі
+                    </h3>
+                    <p class="text-xs text-slate-500">Инфрақұрылымның бүгінгі жүктеме статистикасы</p>
+                </div>
+                <button onclick="toggleModal('adminModal')" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="bg-indigo-50 border border-indigo-100 p-4 rounded-xl text-center">
+                    <p class="text-[11px] font-bold text-indigo-600 uppercase">Жалпы сыйымдылық</p>
+                    <p class="text-2xl font-black text-slate-900 mt-1">140 орын</p>
+                </div>
+                <div class="bg-emerald-50 border border-emerald-100 p-4 rounded-xl text-center">
+                    <p class="text-[11px] font-bold text-emerald-600 uppercase">Қазір бос</p>
+                    <p class="text-2xl font-black text-slate-900 mt-1">82 орын</p>
+                </div>
+                <div class="bg-amber-50 border border-amber-100 p-4 rounded-xl text-center">
+                    <p class="text-[11px] font-bold text-amber-600 uppercase">Жүктеме (Peak)</p>
+                    <p class="text-2xl font-black text-slate-900 mt-1">74%</p>
+                </div>
+            </div>
+
+            <!-- Chart Bar Simulation -->
+            <div class="space-y-3">
+                <h4 class="text-xs font-bold text-slate-700 uppercase">Аймақтар бойынша жүктеме</h4>
+                
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Бас кітапхана (3-қабат)</span>
+                        <span class="text-slate-600">85% лық толы</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-rose-500 h-full rounded-full" style="width: 85%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Open Coworking Zone (2-қабат)</span>
+                        <span class="text-slate-600">60% толы</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-indigo-600 h-full rounded-full" style="width: 60%"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex justify-between text-xs font-semibold mb-1">
+                        <span>Бос аудиториялар (201-208)</span>
+                        <span class="text-slate-600">35% толы</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                        <div class="bg-emerald-500 h-full rounded-full" style="width: 35%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 pt-4 border-t border-slate-100 flex justify-end">
+                <button onclick="toggleModal('adminModal')" class="bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold px-4 py-2 rounded-xl transition">
+                    Аналитиканы жабу
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="bg-white border-t border-slate-200 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p class="font-medium">© 2026 Studyspot. "Тұран Университеті" АҚ арнайы дайындалған стартап прототипі.</p>
+        </div>
+    </footer>
+
+    <!-- APPLICATION LOGIC SCRIPT -->
+    <script>
+        // StudySpot сайтының жарияланған сілтемесі.
+        // Егер CodePen сілтемесі өзгерсе, осы жердегі мекенжайды да ауыстырыңыз.
+        const STUDYSPOT_URL = "https://es-d-12440765720261119-01a0f1d1-b9a9-7dc4-8abd-6e24852727db.codepen.dev/";
+
+        // QR арқылы келген кезде бронь мәліметтерін көрсету
+        function showScannedBooking() {
+            const params = new URLSearchParams(window.location.search);
+            const bookingId = params.get('bookingId');
+            const spot = params.get('spot');
+
+            // QR параметрлері жоқ болса, әдеттегі басты бет ашылады
+            if (!bookingId || !spot) return;
+
+            const university = params.get('university') || 'Көрсетілмеген';
+            const location = params.get('location') || 'Көрсетілмеген';
+            const date = params.get('date') || 'Көрсетілмеген';
+            const time = params.get('time') || 'Көрсетілмеген';
+            const duration = params.get('duration') || 'Көрсетілмеген';
+            const seat = params.get('seat') || 'Көрсетілмеген';
+
+            const result = document.createElement('div');
+            result.id = 'scannedBookingNotice';
+            result.className = 'fixed inset-0 z-[100] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4';
+
+            const card = document.createElement('div');
+            card.className = 'bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl text-center';
+
+            const title = document.createElement('h2');
+            title.className = 'text-xl font-black text-slate-900 mb-2';
+            title.textContent = 'QR бронь мәліметтері';
+
+            const subtitle = document.createElement('p');
+            subtitle.className = 'text-xs text-slate-500 mb-4';
+            subtitle.textContent = 'Сканерленген QR кодтағы ақпарат';
+
+            const details = document.createElement('div');
+            details.className = 'text-left bg-indigo-50 border border-indigo-100 rounded-xl p-4 text-sm space-y-2';
+
+            const rows = [
+                ['Бронь нөмірі', bookingId],
+                ['Университет', university],
+                ['Орын атауы', spot],
+                ['Орналасуы', location],
+                ['Күні', date],
+                ['Уақыты', time],
+                ['Ұзақтығы', duration + ' сағат'],
+                ['Таңдалған орын', seat]
+            ];
+
+            rows.forEach(([label, value]) => {
+                const row = document.createElement('p');
+                row.className = 'text-slate-700';
+                const strong = document.createElement('strong');
+                strong.textContent = label + ': ';
+                row.appendChild(strong);
+                row.appendChild(document.createTextNode(value));
+                details.appendChild(row);
+            });
+
+            const note = document.createElement('p');
+            note.className = 'text-[11px] text-amber-700 bg-amber-50 rounded-lg p-3 mt-3';
+            note.textContent = 'Ескерту: бұл демонстрациялық прототип. QR ішіндегі мәлімет көрсетіледі, бірақ сервер арқылы броньның шынайылығы тексерілмейді.';
+
+            const closeButton = document.createElement('button');
+            closeButton.type = 'button';
+            closeButton.className = 'w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-xl mt-4';
+            closeButton.textContent = 'Сайтқа өту';
+            closeButton.addEventListener('click', () => result.remove());
+
+            card.append(title, subtitle, details, note, closeButton);
+            result.appendChild(card);
+            document.body.appendChild(result);
+        }
+
+        // Sample Spots Data Database for Turan University and others
+        const spotsData = [
+            {
+                id: 1,
+                university: "Turan",
+                title: "Тұран Open Coworking Zone",
+                location: "Бас корпус, 2-қабат",
+                category: "coworking",
+                capacity: 40,
+                availableSeats: 18,
+                image: "https://images.unsplash.com/photo-1527192491265-7e15c55b1ed2?auto=format&fit=crop&w=800&q=80",
+                amenities: ["socket", "quiet"],
+                amenitiesText: ["🔌 Розетка бар", "🤫 Quiet Zone", "📶 Wi-Fi 200Mbps"],
+                rating: 4.9
+            },
+            {
+                id: 2,
+                university: "Turan",
+                title: "Тұран Орталық Кітапханасы",
+                location: "Бас корпус, 3-қабат",
+                category: "library",
+                capacity: 60,
+                availableSeats: 12,
+                image: "https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=800&q=80",
+                amenities: ["socket", "quiet"],
+                amenitiesText: ["🔌 Әр үстелде розетка", "📚 Электронды каталог", "🤫 Қатаң тыныштық"],
+                rating: 4.8
+            },
+            {
+                id: 3,
+                university: "Turan",
+                title: "Топтық Жобалар Аудиториясы №205",
+                location: "А-корпус, 2-қабат",
+                category: "classroom",
+                capacity: 15,
+                availableSeats: 8,
+                image: "https://images.unsplash.com/photo-1517502884422-41eaead166d4?auto=format&fit=crop&w=800&q=80",
+                amenities: ["board", "socket"],
+                amenitiesText: ["🖊️ Маркерлік тақта", "🖥️ Проектор", "🔌 6 Розетка"],
+                rating: 5.0
+            },
+            {
+                id: 4,
+                university: "Turan",
+                title: "IT-Lab & Кибер-бөлме",
+                location: "Б-корпус, 4-қабат",
+                category: "coworking",
+                capacity: 25,
+                availableSeats: 5,
+                image: "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=800&q=80",
+                amenities: ["socket"],
+                amenitiesText: ["🖥️ Моноблоктар", "⚡ Жоғары жылдамдықтағы интернет"],
+                rating: 4.7
+            },
+            {
+                id: 5,
+                university: "KazNU",
+                title: "ҚазҰУ Әл-Фараби Кітапханасы",
+                location: "Ғылыми кітапхана, 2-қабат",
+                category: "library",
+                capacity: 100,
+                availableSeats: 45,
+                image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&w=800&q=80",
+                amenities: ["socket", "quiet"],
+                amenitiesText: ["🔌 Розетка", "🤫 Тыныш аймақ"],
+                rating: 4.9
+            },
+            {
+                id: 6,
+                university: "Satbayev",
+                title: "Satbayev Tech Coworking",
+                location: "Тау-кен корпусы, 1-қабат",
+                category: "coworking",
+                capacity: 50,
+                availableSeats: 20,
+                image: "https://images.unsplash.com/photo-1497215728101-856f4ea42174?auto=format&fit=crop&w=800&q=80",
+                amenities: ["socket", "board"],
+                amenitiesText: ["🖊️ Маркерлік тақта", "🔌 Розетка"],
+                rating: 4.6
+            }
+        ];
+
+        // Global State Variables
+        let activeCategory = 'all';
+        let activeBookings = [];
+        let selectedSpotForBooking = null;
+        let selectedSeatNumber = "№01";
+
+        // DOM Initialization
+        document.addEventListener("DOMContentLoaded", () => {
+            // Set default date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('bookingDate').value = today;
+
+            // Initial render
+            filterSpots();
+            lucide.createIcons();
+            showScannedBooking();
+        });
+
+        // Set Active Category Tab
+        function setCategory(category) {
+            activeCategory = category;
+            document.querySelectorAll('.category-tab').forEach(btn => {
+                btn.classList.remove('bg-white', 'text-indigo-600', 'shadow-sm');
+                btn.classList.add('text-slate-600');
+            });
+            const activeBtn = document.getElementById(`tab-${category}`);
+            if (activeBtn) {
+                activeBtn.classList.add('bg-white', 'text-indigo-600', 'shadow-sm');
+                activeBtn.classList.remove('text-slate-600');
+            }
+            filterSpots();
+        }
+
+        // Filter Spots Logic
+        function filterSpots() {
+            const selectedUniv = document.getElementById('universitySelect').value;
+            const searchKeyword = document.getElementById('searchInput').value.toLowerCase();
+            const needSocket = document.getElementById('filterSocket').checked;
+            const needBoard = document.getElementById('filterBoard').checked;
+            const needQuiet = document.getElementById('filterQuiet').checked;
+
+            const filtered = spotsData.filter(spot => {
+                // University filter
+                if (spot.university !== selectedUniv) return false;
+                
+                // Category tab filter
+                if (activeCategory !== 'all' && spot.category !== activeCategory) return false;
+                
+                // Keyword search filter
+                if (searchKeyword && !spot.title.toLowerCase().includes(searchKeyword) && !spot.location.toLowerCase().includes(searchKeyword)) {
+                    return false;
+                }
+
+                // Amenity filters
+                if (needSocket && !spot.amenities.includes('socket')) return false;
+                if (needBoard && !spot.amenities.includes('board')) return false;
+                if (needQuiet && !spot.amenities.includes('quiet')) return false;
+
+                return true;
+            });
+
+            renderSpotsGrid(filtered);
+            updateHeadlineText(selectedUniv, filtered.length);
+        }
+
+        // Update Headline Display
+        function updateHeadlineText(univ, count) {
+            const headlineEl = document.getElementById('spotsHeadline');
+            const countTextEl = document.getElementById('spotsCountText');
+            
+            const univNames = {
+                "Turan": "Тұран Университетіндегі",
+                "KazNU": "ҚазҰУ-дегі",
+                "Satbayev": "Satbayev University-дегі",
+                "AITU": "AITU-дегі"
+            };
+
+            headlineEl.textContent = `${univNames[univ] || "Университеттегі"} орындар`;
+            countTextEl.textContent = `Қолжетімді ${count} аймақ табылды`;
+        }
+
+        // Render Spot Cards Grid
+        function renderSpotsGrid(spots) {
+            const gridContainer = document.getElementById('spotsGrid');
+            gridContainer.innerHTML = '';
+
+            if (spots.length === 0) {
+                gridContainer.innerHTML = `
+                    <div class="col-span-full bg-white p-8 rounded-2xl text-center border border-slate-200">
+                        <i data-lucide="search-x" class="w-10 h-10 text-slate-300 mx-auto mb-2"></i>
+                        <p class="font-bold text-slate-700 text-sm">Бұл сүзгілер бойынша орын табылмады</p>
+                        <p class="text-xs text-slate-400 mt-1">Іздеу параметрін немесе сүзгілерді өзгертіп көріңіз</p>
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            spots.forEach(spot => {
+                const cardHtml = `
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between">
+                        <div>
+                            <!-- Card Image Header -->
+                            <div class="relative h-44 overflow-hidden bg-slate-100">
+                                <img src="${spot.image}" alt="${spot.title}" class="w-full h-full object-cover">
+                                <span class="absolute top-3 right-3 bg-white/90 backdrop-blur-md text-slate-800 text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow-sm flex items-center gap-1">
+                                    ⭐ ${spot.rating}
+                                </span>
+                                <span class="absolute bottom-3 left-3 bg-slate-900/80 backdrop-blur-md text-white text-[10px] font-bold px-2.5 py-1 rounded-lg">
+                                    ${spot.location}
+                                </span>
+                            </div>
+
+                            <!-- Card Body -->
+                            <div class="p-4 space-y-3">
+                                <div>
+                                    <h3 class="font-extrabold text-slate-900 text-base leading-snug">${spot.title}</h3>
+                                    <p class="text-xs text-emerald-600 font-bold mt-1 flex items-center gap-1">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-pulse"></span>
+                                        ${spot.availableSeats} бос орын бар (${spot.capacity} орыннан)
+                                    </p>
+                                </div>
+
+                                <!-- Amenity Badges -->
+                                <div class="flex flex-wrap gap-1.5">
+                                    ${spot.amenitiesText.map(a => `<span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-md">${a}</span>`).join('')}
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card Footer Action -->
+                        <div class="p-4 pt-0">
+                            <button onclick="openBookingModal(${spot.id})" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2.5 rounded-xl text-xs transition shadow-md shadow-indigo-100 flex items-center justify-center space-x-1.5">
+                                <i data-lucide="calendar-plus" class="w-4 h-4"></i>
+                                <span>Орын таңдау және броньдау</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+                gridContainer.insertAdjacentHTML('beforeend', cardHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Toggle Grid vs Map View Mode
+        function setViewMode(mode) {
+            const gridView = document.getElementById('spotsGrid');
+            const mapView = document.getElementById('spotsMapView');
+            const btnGrid = document.getElementById('btnViewGrid');
+            const btnMap = document.getElementById('btnViewMap');
+
+            if (mode === 'map') {
+                gridView.classList.add('hidden');
+                mapView.classList.remove('hidden');
+                btnMap.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                btnGrid.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+            } else {
+                gridView.classList.remove('hidden');
+                mapView.classList.add('hidden');
+                btnGrid.classList.add('bg-white', 'text-slate-800', 'shadow-sm');
+                btnMap.classList.remove('bg-white', 'text-slate-800', 'shadow-sm');
+            }
+        }
+
+        // Open Booking Modal for specific spot
+        function openBookingModal(spotId) {
+            selectedSpotForBooking = spotsData.find(s => s.id === spotId);
+            if (!selectedSpotForBooking) return;
+
+            document.getElementById('modalSpotTitle').textContent = selectedSpotForBooking.title;
+            document.getElementById('modalSpotLocation').textContent = `${selectedSpotForBooking.location}`;
+
+            // Populate seat picker buttons
+            const seatsContainer = document.getElementById('seatsPickerContainer');
+            seatsContainer.innerHTML = '';
+
+            selectedSeatNumber = "№01"; // Default select seat 1
+
+            for (let i = 1; i <= 10; i++) {
+                const seatNumStr = `№${i < 10 ? '0' + i : i}`;
+                const isSelected = i === 1;
+                const seatBtn = document.createElement('button');
+                seatBtn.type = 'button';
+                seatBtn.className = `seat-btn py-2.5 border text-xs font-bold rounded-xl transition ${isSelected ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'}`;
+                seatBtn.textContent = seatNumStr;
+                seatBtn.onclick = () => {
+                    document.querySelectorAll('.seat-btn').forEach(b => {
+                        b.className = 'seat-btn py-2.5 border text-xs font-bold rounded-xl transition bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100';
+                    });
+                    seatBtn.className = 'seat-btn py-2.5 border text-xs font-bold rounded-xl transition bg-indigo-600 text-white border-indigo-600';
+                    selectedSeatNumber = seatNumStr;
+                    document.getElementById('summarySeat').textContent = `Үстел ${selectedSeatNumber}`;
+                };
+                seatsContainer.appendChild(seatBtn);
+            }
+
+            // Update Summary Card
+            const dateVal = document.getElementById('bookingDate').value;
+            const timeVal = document.getElementById('bookingTime').value;
+            const durationVal = document.getElementById('bookingDuration').value;
+
+            document.getElementById('summaryUniv').textContent = "Тұран Университеті";
+            document.getElementById('summaryDateTime').textContent = `${dateVal}, сағат ${timeVal} (${durationVal} сағат)`;
+            document.getElementById('summarySeat').textContent = `Үстел ${selectedSeatNumber}`;
+
+            toggleModal('bookingModal');
+        }
+
+        // Quick Select Seat from Interactive Map View
+        function quickSelectSeat(seatCode) {
+            openBookingModal(1); // Open Turan Open Coworking
+            document.getElementById('summarySeat').textContent = `Аймақ орыны: ${seatCode}`;
+            selectedSeatNumber = seatCode;
+        }
+
+        // Confirm Booking & Generate QR Code
+        function confirmBooking() {
+            if (!selectedSpotForBooking) return;
+
+            const dateVal = document.getElementById('bookingDate').value;
+            const timeVal = document.getElementById('bookingTime').value;
+            const durationVal = document.getElementById('bookingDuration').value;
+
+            const bookingItem = {
+                id: Date.now(),
+                spotTitle: selectedSpotForBooking.title,
+                location: selectedSpotForBooking.location,
+                date: dateVal,
+                time: timeVal,
+                duration: durationVal,
+                seat: selectedSeatNumber,
+                status: 'Активті'
+            };
+
+            activeBookings.unshift(bookingItem);
+            updateBookingsUI();
+
+            // Close Booking Modal and open QR Code modal
+            toggleModal('bookingModal');
+
+            // Set QR Modal Details
+            document.getElementById('qrModalSpotName').textContent = `Тұран • ${selectedSpotForBooking.title}`;
+            document.getElementById('qrModalTime').textContent = `${dateVal}, ${timeVal} (${durationVal} сағатқа)`;
+            document.getElementById('qrModalSeat').textContent = `Таңдалған орын: ${selectedSeatNumber}`;
+
+            // QR кодқа сайттың нақты сілтемесі мен бронь мәліметтерін енгізу
+            const qrContainer = document.getElementById('qrcode');
+            qrContainer.innerHTML = '';
+
+            const bookingParams = new URLSearchParams({
+                bookingId: String(bookingItem.id),
+                university: selectedSpotForBooking.university,
+                spot: bookingItem.spotTitle,
+                location: bookingItem.location,
+                date: bookingItem.date,
+                time: bookingItem.time,
+                duration: String(bookingItem.duration),
+                seat: bookingItem.seat
+            });
+
+            // Телефонмен сканерлегенде осы мекенжай ашылады
+            const bookingUrl = `${STUDYSPOT_URL}?${bookingParams.toString()}`;
+
+            new QRCode(qrContainer, {
+                text: bookingUrl,
+                width: 180,
+                height: 180,
+                colorDark: "#0f172a",
+                colorLight: "#ffffff",
+                correctLevel: QRCode.CorrectLevel.H
+            });
+
+            // QR терезесіндегі ақпарат
+            toggleModal('qrModal');
+        }
+
+        // Update My Bookings Modal UI & Count Badge
+        function updateBookingsUI() {
+            const badge = document.getElementById('bookingCountBadge');
+            const list = document.getElementById('myBookingsList');
+
+            if (activeBookings.length > 0) {
+                badge.textContent = activeBookings.length;
+                badge.classList.remove('hidden');
+                badge.classList.add('flex');
+            } else {
+                badge.classList.add('hidden');
+            }
+
+            list.innerHTML = '';
+            if (activeBookings.length === 0) {
+                list.innerHTML = `
+                    <div class="text-center py-8 text-slate-400 text-xs">
+                        <i data-lucide="bookmark-x" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                        Қазірше белсенді броньдарыңыз жоқ
+                    </div>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            activeBookings.forEach(item => {
+                const itemHtml = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs flex items-center justify-between">
+                        <div>
+                            <p class="font-bold text-slate-800">${item.spotTitle}</p>
+                            <p class="text-slate-500 text-[11px]">${item.date} • ${item.time} (${item.duration} сағ) • ${item.seat}</p>
+                            <span class="inline-block bg-emerald-100 text-emerald-700 font-bold text-[10px] px-2 py-0.5 rounded-md mt-1">
+                                ${item.status}
+                            </span>
+                        </div>
+                        <button onclick="cancelBooking(${item.id})" class="text-rose-500 hover:text-rose-700 text-[11px] font-bold px-2 py-1 rounded hover:bg-rose-50 transition">
+                            Бас тарту
+                        </button>
+                    </div>
+                `;
+                list.insertAdjacentHTML('beforeend', itemHtml);
+            });
+
+            lucide.createIcons();
+        }
+
+        // Cancel Active Booking
+        function cancelBooking(id) {
+            activeBookings = activeBookings.filter(b => b.id !== id);
+            updateBookingsUI();
+        }
+
+        // Generic Modal Toggle Helper
+        function toggleModal(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) {
+                modal.classList.toggle('hidden');
+            }
+        }
+    </script>
+<!-- StudySpot AI көмекшісі -->
+<button id="studyspot-ai-launcher" type="button" aria-label="AI көмекшіні ашу" title="StudySpot AI">✦</button>
+
+<section id="studyspot-ai-panel" aria-label="StudySpot AI чаты">
+    <div class="ai-chat-header">
+        <div class="ai-chat-avatar">✦</div>
+        <div>
+            <div class="font-extrabold text-sm">StudySpot AI</div>
+            <div class="text-[10px] text-emerald-300">● Онлайн көмекші</div>
+        </div>
+        <button id="studyspot-ai-close" type="button" aria-label="Чатты жабу">×</button>
+    </div>
+
+    <div id="studyspot-ai-messages" aria-live="polite">
+        <div class="ai-message bot">Сәлем! Мен StudySpot AI көмекшісімін. Университет, кітапхана, орын броньдау немесе кез келген басқа тақырып бойынша сұрақ қоя аласың. Қалай көмектесейін?</div>
+    </div>
+
+    <div class="ai-chat-suggestions">
+        <button type="button" data-ai-question="StudySpot-та қалай орын броньдаймын?">Қалай броньдаймын?</button>
+        <button type="button" data-ai-question="Тұран кітапханасы туралы айтып берші.">Кітапхана</button>
+        <button type="button" data-ai-question="Инфляция деген не?">Инфляция деген не?</button>
+    </div>
+
+    <form id="studyspot-ai-form" class="ai-chat-compose">
+        <input id="studyspot-ai-input" type="text" maxlength="2000" autocomplete="off"
+               placeholder="Сұрағыңды жаз..." aria-label="Сұрағыңды жаз">
+        <button id="studyspot-ai-send" type="submit" aria-label="Жіберу">➤</button>
+    </form>
+    <div class="ai-chat-disclaimer">Жеке құпиясөздер мен құпия деректерді жіберме.</div>
+</section>
+
+<script>
+(() => {
+    const launcher = document.getElementById('studyspot-ai-launcher');
+    const panel = document.getElementById('studyspot-ai-panel');
+    const closeButton = document.getElementById('studyspot-ai-close');
+    const form = document.getElementById('studyspot-ai-form');
+    const input = document.getElementById('studyspot-ai-input');
+    const sendButton = document.getElementById('studyspot-ai-send');
+    const messagesBox = document.getElementById('studyspot-ai-messages');
+
+    // Әңгіме осы бет ашық тұрған кезде жадта сақталады.
+    const conversation = [];
+
+    function openChat() {
+        panel.classList.add('open');
+        launcher.setAttribute('aria-expanded', 'true');
+        input.focus();
+    }
+
+    function closeChat() {
+        panel.classList.remove('open');
+        launcher.setAttribute('aria-expanded', 'false');
+    }
+
+    function addMessage(text, role) {
+        const message = document.createElement('div');
+        message.className = 'ai-message ' + role;
+        message.textContent = text;
+        messagesBox.appendChild(message);
+        messagesBox.scrollTop = messagesBox.scrollHeight;
+        return message;
+    }
+
+    async function sendMessage(rawText) {
+        const message = rawText.trim();
+        if (!message || sendButton.disabled) return;
+
+        addMessage(message, 'user');
+        conversation.push({ role: 'user', content: message });
+        input.value = '';
+        sendButton.disabled = true;
+        input.disabled = true;
+
+        const waiting = addMessage('Жауап дайындалып жатыр...', 'bot');
+
+        try {
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ messages: conversation.slice(-12) })
+            });
+
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || 'Серверден жауап алу мүмкін болмады.');
+            }
+            if (!data.reply) {
+                throw new Error('AI бос жауап қайтарды. Қайталап көр.');
+            }
+
+            waiting.remove();
+            addMessage(data.reply, 'bot');
+            conversation.push({ role: 'assistant', content: data.reply });
+        } catch (error) {
+            waiting.remove();
+            addMessage(
+                error.message.includes('Failed to fetch')
+                    ? 'AI серверіне қосыла алмадым. Сайт сервер арқылы жарияланғанын және /api/chat қызметі қосылғанын тексер.'
+                    : error.message,
+                'error'
+            );
+            // Жіберілмеген сұрақты әңгіме тарихынан алып тастаймыз.
+            conversation.pop();
+        } finally {
+            sendButton.disabled = false;
+            input.disabled = false;
+            input.focus();
+        }
+    }
+
+    launcher.addEventListener('click', () => {
+        if (panel.classList.contains('open')) closeChat();
+        else openChat();
+    });
+    closeButton.addEventListener('click', closeChat);
+    form.addEventListener('submit', event => {
+        event.preventDefault();
+        sendMessage(input.value);
+    });
+
+    document.querySelectorAll('[data-ai-question]').forEach(button => {
+        button.addEventListener('click', () => {
+            openChat();
+            sendMessage(button.getAttribute('data-ai-question'));
+        });
+    });
+})();
+</script>
+</body>
+</html>
